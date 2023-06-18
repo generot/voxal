@@ -1,24 +1,23 @@
-(define while cond clb
-	(clb)
-	(if (cond) 
-		(while cond clb)))
+(define iterate begin end clb
+	(if (< begin end)
+		(+ (clb begin) (iterate (+ 1 begin) end clb))))
 
-(define main a1 a2 a3
-	(define s
-		(if (< a1 a2)
-			a1
-			a2))
+(define fibonacci n
+	(if (< n 2)
+		n
+		(+ (fibonacci (- n 1)) (fibonacci (- n 2)))))
 
-	(print s "\nHello, world")
+(print (fibonacci 5))
 
-	(while (< s 10)
-		(set s (+ s 1))
-		(print s)))
+(iterate 0 10
+	(lambda x 
+		(print x)))
 
 <program> ::= { <function> }
-<function> ::= '(' 'define' <ident> { <ident> } { <function> } { <call> } ')'
-<call> ::= '(' <ident> { <param> } ')'
-<param> ::= <ident> | <literal>
+<function> ::= '(' <ident> { <param> } ')'
+<param> ::= <ident> | <literal> | <function>
 <literal> ::= '\".*\"' | <number>
-<ident> ::= [a-zA-Z0-9\-]
+<ident> ::= [^"'()\s]+
 <number> ::= [0-9]+
+
+The current vocabulary is lexed by the REGEX: [()]|[^"'()\s]+|(\".*\")
