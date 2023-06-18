@@ -13,8 +13,9 @@ Token::Token(string rep) {
     regex num_regex("\\d+(\\.\\d+)?");
     regex str_regex("\".*\"");
 
-    if(rep == "(")      type = TK_LEFTPAR;
+    if(rep == "(") type = TK_LEFTPAR;
     else if(rep == ")") type = TK_RIGHTPAR;
+    else if(regex_search(rep, str_regex)) type = TK_LITERAL_STRING;
     else if(regex_search(rep, ident_regex)) {
         if(regex_search(rep, num_regex)) {
             type = TK_LITERAL_CONST;
@@ -24,9 +25,7 @@ Token::Token(string rep) {
             type = TK_IDENT;
         }
     } 
-    else if(regex_search(rep, str_regex)) {
-        type = TK_LITERAL_STRING;
-    } else {
+    else {
         type = TK_INVALID;
     }
 
@@ -88,19 +87,25 @@ void Lexer::tokenize() {
         tokens.push_back(move(curr_token));
     }
 
+    tokens.pop_back();
+
     delete[] buf;
 }
 
-Token Lexer::next_token(int lookahead) {
+bool Lexer::has_tokens() {
+    return iter != tokens.end();
+}
+
+Token Lexer::next_token(int peek) {
     if(iter == TokenIterator()) {
         iter = tokens.begin();
     }
 
-    if(lookahead != 0) {
-        return *(iter + lookahead);
+    if(peek != -1) {
+        return *(iter + peek);
     }
 
-    if(iter == tokens.end()) {
+    if(!has_tokens()) {
         return Token();
     }
 

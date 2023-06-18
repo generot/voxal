@@ -14,9 +14,14 @@ int main(int argc, char **argv) {
 
     lexer.tokenize();
 
+#ifdef __DEBUG__    
+    string types[] = { "LEFT_PAR", "RIGHT_PAR", "IDENT", "STRING", "CONST", "INVALID" };
+
     for(Token i = lexer.next_token(); i != Token(); i = lexer.next_token()) {
-        cout << i.strrep << endl;
+        cout << i.strrep << " " << types[i.type] << endl;
+
     }
+#endif
 
     return 0;
 }

@@ -46,7 +46,9 @@ public:
 
     void tokenize();
 
-    Token next_token(int lookahead = 0);
+    bool has_tokens();
+
+    Token next_token(int peek = -1);
     Token prev_token();
 
     ~Lexer();
