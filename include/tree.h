@@ -5,35 +5,35 @@
 #include <string>
 
 enum VoxalValueType {
-    VX_LITERAL_CONST,
-    VX_LITERAL_STR,
-    VX_FUNC_REF,
-    VX_FUNCTION,
-    VX_INVALID
+    VX_VTYPE_LCONST,
+    VX_VTYPE_LSTR,
+    VX_VTYPE_REF,
+    VX_VTYPE_FUNCTION,
+    VX_VTYPE_INVALID
 };
 
 enum VoxalFunctionType {
-    VX_FUNC_DEFINITION,
-    VX_FUNC_CALL
+    VX_FTYPE_DEFINITION,
+    VX_FTYPE_CALL
 };
 
 struct VoxalNodeTrait {};
 
 struct VoxalValue : VoxalNodeTrait {
     virtual VoxalValueType reportType() {
-        return VX_INVALID;
+        return VX_VTYPE_INVALID;
     }
 };
 
 struct VoxalFunction : VoxalNodeTrait {
-    VoxalFunctionType type = VX_FUNC_CALL;
+    VoxalFunctionType type = VX_FTYPE_CALL;
 
     std::string ident;
-    std::vector<VoxalValue> params;
+    std::vector<VoxalValue*> params;
 };
 
 struct VoxalProgram : VoxalNodeTrait {
-    std::vector<VoxalFunction> calls;
+    std::vector<VoxalValue*> statements;
 };
 
 struct VoxalValueConst : VoxalValue {
@@ -42,7 +42,7 @@ struct VoxalValueConst : VoxalValue {
     VoxalValueConst(double cval) : VoxalValue(), const_val(cval) {}
 
     VoxalValueType reportType() override {
-        return VX_LITERAL_CONST;
+        return VX_VTYPE_LCONST;
     }
 };
 
@@ -52,7 +52,7 @@ struct VoxalValueString : VoxalValue {
     VoxalValueString(std::string sval) : VoxalValue(), str_val(sval) {}
 
     VoxalValueType reportType() override {
-        return VX_LITERAL_STR;
+        return VX_VTYPE_LSTR;
     }
 };
 
@@ -60,17 +60,17 @@ struct VoxalValueRef : VoxalValueString {
     VoxalValueRef(std::string sval) : VoxalValueString(sval) {}
 
     VoxalValueType reportType() override {
-        return VX_FUNC_REF;
+        return VX_VTYPE_REF;
     }
 };
 
-struct VoxalValueCall : VoxalValue {
-    VoxalFunction call;
+struct VoxalValueFunc : VoxalValue {
+    VoxalFunction func;
 
-    VoxalValueCall(VoxalFunction cl) : VoxalValue(), call(cl) {}
+    VoxalValueFunc(VoxalFunction cl) : VoxalValue(), func(cl) {}
 
     VoxalValueType reportType() override {
-        return VX_FUNCTION;
+        return VX_VTYPE_FUNCTION;
     }
 };
 

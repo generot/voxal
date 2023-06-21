@@ -11,7 +11,7 @@ protected:
     bool expect(TokenType expected);
     Token accept();
 
-    VoxalValue parse_value();
+    VoxalValue *parse_value();
     VoxalFunction parse_function();
 public:
     Parser(Lexer *const lx_ref);

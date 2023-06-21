@@ -16,26 +16,6 @@ Token Parser::accept() {
     return lx->next_token();
 }
 
-VoxalValue Parser::parse_value() {
-    if(expect(TK_IDENT)) {
-        return VoxalValueRef(accept().strrep);
-    }
-
-    if(expect(TK_LITERAL_STRING)) {
-        return VoxalValueString(accept().strrep);
-    }
-
-    if(expect(TK_LITERAL_CONST)) {
-        return VoxalValueConst(accept().numrep);
-    }
-
-    if(expect(TK_LEFTPAR)) {
-        return VoxalValueCall(parse_function());
-    }
-
-    return VoxalValue();
-}
-
 VoxalFunction Parser::parse_function() {
     VoxalFunction func;
 
@@ -45,16 +25,23 @@ VoxalFunction Parser::parse_function() {
             Token ident = accept();
 
             if(ident.strrep == "define") {
-                func.type = VX_FUNC_DEFINITION;
+                func.type = VX_FTYPE_DEFINITION;
                 ident = accept();
             }
 
             func.ident = ident.strrep;
 
             while(!expect(TK_RIGHTPAR)) {
-                VoxalValue param = parse_value();
+                VoxalValue *param = parse_value();
 
                 func.params.push_back(param);
+            }
+
+            Token right_par = accept();
+
+            if(func.type == VX_FTYPE_DEFINITION && 
+            func.params.back()->reportType() != VX_VTYPE_FUNCTION) {
+                //REPORT ERROR    
             }
         }
     }
@@ -62,13 +49,37 @@ VoxalFunction Parser::parse_function() {
     return func;
 }
 
+VoxalValue *Parser::parse_value() {
+    if(expect(TK_IDENT)) {
+        return new VoxalValueRef(accept().strrep);
+    }
+
+    if(expect(TK_LITERAL_STRING)) {
+        return new VoxalValueString(accept().strrep);
+    }
+
+    if(expect(TK_LITERAL_CONST)) {
+        return new VoxalValueConst(accept().numrep);
+    }
+
+    if(expect(TK_LEFTPAR)) {
+        return new VoxalValueFunc(parse_function());
+    }
+
+    return new VoxalValue();
+}
+
+/*
+    Rewrite this shit to properly produce expressions (VoxalValue), instead of functions only!
+    The current setup is pretty much useless...
+*/
 VoxalProgram Parser::parse_program() {
     VoxalProgram program;
 
     while(lx->has_tokens()) {
-        VoxalFunction call = parse_function();
+        VoxalValue *statement = parse_value();
 
-        program.calls.push_back(call);
+        program.statements.push_back(statement);
     }
 
     return program;

@@ -1,6 +1,7 @@
 #ifndef __LEXER_H__
 #define __LEXER_H__
 
+#include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>

@@ -10,9 +10,14 @@ int main(int argc, char **argv) {
     }
 
     string path = string(argv[1]);
-    Lexer lexer(path);
+    Lexer vx_lexer(path);
 
-    lexer.tokenize();
+    vx_lexer.tokenize();
+
+    Parser vx_parser(&vx_lexer);
+    Runtime vx_runtime(vx_parser.parse_program());
+
+    vx_runtime.run();
 
 #ifdef __DEBUG__    
     string types[] = { "LEFT_PAR", "RIGHT_PAR", "IDENT", "STRING", "CONST", "INVALID" };

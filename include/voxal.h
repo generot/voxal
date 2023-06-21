@@ -3,5 +3,6 @@
 
 #include "lexer.h"
 #include "parser.h"
+#include "runtime.h"
 
 #endif //__VOXAL_H__
