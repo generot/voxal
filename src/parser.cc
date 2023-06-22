@@ -69,10 +69,6 @@ VoxalValue *Parser::parse_value() {
     return new VoxalValue();
 }
 
-/*
-    Rewrite this shit to properly produce expressions (VoxalValue), instead of functions only!
-    The current setup is pretty much useless...
-*/
 VoxalProgram Parser::parse_program() {
     VoxalProgram program;
 

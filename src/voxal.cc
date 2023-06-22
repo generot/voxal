@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 #ifdef __DEBUG__    
     string types[] = { "LEFT_PAR", "RIGHT_PAR", "IDENT", "STRING", "CONST", "INVALID" };
 
-    for(Token i = lexer.next_token(); i != Token(); i = lexer.next_token()) {
+    for(Token i = vx_lexer.next_token(); i != Token(); i = vx_lexer.next_token()) {
         cout << i.strrep << " " << types[i.type] << endl;
 
     }

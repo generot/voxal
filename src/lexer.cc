@@ -10,7 +10,7 @@ Token::Token() {
 
 Token::Token(string rep) {
     regex ident_regex("[^\"'()\\s]+");
-    regex num_regex("\\d+(\\.\\d+)?");
+    regex num_regex("^\\d+(\\.\\d+)?$");
     regex str_regex("\".*\"");
 
     if(rep == "(") type = TK_LEFTPAR;

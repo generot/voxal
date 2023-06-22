@@ -2,3 +2,24 @@
 (/ 10 (* 3 2))
 (&& (> 5 2) (> 2 1))
 
+(define a (+ 10 3))
+
+(define b arg1 arg2
+    (+ arg1 arg2))
+
+(define max c d
+    (if (< c d)
+        (d)
+        (c)))
+
+(define fibonacci n
+    (if (< n 2)
+        (n)
+        (+ (fibonacci (- n 1)) (fibonacci (- n 2)))))
+
+(fibonacci 10)
+
+(if (< 10 3) 
+    5 
+    "Hello, world")
+

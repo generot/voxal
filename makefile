@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-Wall -pedantic
+CFLAGS=-Wall -pedantic -g
 
 BIN=./bin
 SRC=./src
@@ -9,10 +9,10 @@ INCPATH=./include
 OBJ=$(patsubst %.cc, %.o, $(wildcard $(SRC)/*.cc))
 
 $(BIN)/voxal.exe: $(OBJ)
-	$(CC) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^
 
 $(SRC)/%.o: $(SRC)/%.cc $(INCPATH)/%.h
-	$(CC) -o $@ -c $< -I $(INCPATH)
+	$(CC) $(CFLAGS) -o $@ -c $< -I $(INCPATH)
 
 .PHONY: clean rmobj
 

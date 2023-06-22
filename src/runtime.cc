@@ -18,19 +18,26 @@ RuntimeSymbol::RuntimeSymbol(string name, VoxalBuiltin builtin) {
 
 RuntimeSymbol::RuntimeSymbol(VoxalValueFunc *function) {
     if (function->func.type != VX_FTYPE_DEFINITION) {
-        throw std::runtime_error("RuntimeSymbol: Function definition expected.");
+        throw runtime_error("RuntimeSymbol: Function definition expected.");
     }
 
     auto &fparams = function->func.params;
 
     if (fparams.size() > 1) {
-        params = std::vector<VoxalValue *>(fparams.begin(), fparams.end() - 1);
+        params = vector<VoxalValue*>(fparams.begin(), fparams.end() - 1);
     }
 
     type = SYMBOL_FUNCTION;
 
     ident = function->func.ident;
     body = function->func.params.back();
+}
+
+RuntimeSymbol::RuntimeSymbol(string name, VoxalValue *val) {
+    type = SYMBOL_DETERMINABLE;
+
+    ident = name;
+    body = val;
 }
 
 Runtime::Runtime(VoxalProgram prog) {
@@ -52,26 +59,72 @@ Runtime::Runtime(VoxalProgram prog) {
 
 void Runtime::run() {
     for(VoxalValueFunc *call : calls) {
-        VoxalValueConst *res = (VoxalValueConst*)call_function(call, symbol_table);
+        VoxalValue *res = eval_value(call, symbol_table);
 
-        cout << res->const_val << endl;
+        print_voxal_value(res);
+    }
+}
+
+void print_voxal_value(VoxalValue *val) {
+    //cout << "Type: " << (int)val->reportType() << endl;
+
+    switch(val->reportType()) {
+    case VX_VTYPE_LCONST:
+        cout << ((VoxalValueConst*)val)->const_val << endl;
+        break;
+    case VX_VTYPE_LSTR:
+        cout << ((VoxalValueString*)val)->str_val << endl;
+        break;
+    case VX_VTYPE_REF:
+        cout << "<Reference: '" << ((VoxalValueRef*)val)->str_val << "'>" << endl;
+        break;
+    case VX_VTYPE_FUNCTION:
+        cout << "<Function: '" << ((VoxalValueFunc*)val)->func.ident << "'>" << endl;
+        break;
     }
 }
 
 void define_builtins(SymbolTable& symtable) {
     unordered_map<string, VoxalBuiltin> builtins = {
-        { "+", create_op_builtin(2, [=](vector<double> args) { return args[0] + args[1]; }) },
-        { "-", create_op_builtin(2, [=](vector<double> args) { return args[0] - args[1]; }) },
-        { "*", create_op_builtin(2, [=](vector<double> args) { return args[0] * args[1]; }) },
-        { "/", create_op_builtin(2, [=](vector<double> args) { return args[0] / args[1]; }) },
-        { "<", create_op_builtin(2, [=](vector<double> args) { return args[0] < args[1]; }) },
-        { ">", create_op_builtin(2, [=](vector<double> args) { return args[0] > args[1]; }) },
+        { "+",  create_op_builtin(2, [=](vector<double> args) { return args[0] + args[1]; }) },
+        { "-",  create_op_builtin(2, [=](vector<double> args) { return args[0] - args[1]; }) },
+        { "*",  create_op_builtin(2, [=](vector<double> args) { return args[0] * args[1]; }) },
+        { "/",  create_op_builtin(2, [=](vector<double> args) { return args[0] / args[1]; }) },
+        { "<",  create_op_builtin(2, [=](vector<double> args) { return args[0] < args[1]; }) },
+        { ">",  create_op_builtin(2, [=](vector<double> args) { return args[0] > args[1]; }) },
         { "<=", create_op_builtin(2, [=](vector<double> args) { return args[0] <= args[1]; }) },
         { ">=", create_op_builtin(2, [=](vector<double> args) { return args[0] >= args[1]; }) },
         { "!=", create_op_builtin(2, [=](vector<double> args) { return args[0] != args[1]; }) },
         { "==", create_op_builtin(2, [=](vector<double> args) { return args[0] == args[1]; }) },
         { "&&", create_op_builtin(2, [=](vector<double> args) { return args[0] && args[1]; }) },
         { "||", create_op_builtin(2, [=](vector<double> args) { return args[0] || args[1]; }) },
+
+        { "if", [=](vector<VoxalValue*> args, SymbolTable context) -> VoxalValue* {
+            if(args.size() != 3) {
+                return NULL;
+            }
+
+            if(args[0]->reportType() != VX_VTYPE_FUNCTION) {
+                return NULL;
+            }
+
+            VoxalValue *res = eval_value((VoxalValueFunc*)args[0], context);
+            VoxalValue *ret_val = NULL;
+
+            if(res->reportType() != VX_VTYPE_LCONST) {
+                return NULL;
+            }
+
+            VoxalValueConst *cnst = (VoxalValueConst*)res;
+
+            if(cnst->const_val) {
+                ret_val = args[1];
+            } else {
+                ret_val = args[2];
+            }
+
+            return eval_value(ret_val, context);
+        }}
     };
 
     for(pair<string, VoxalBuiltin> tuple : builtins) {
@@ -79,11 +132,58 @@ void define_builtins(SymbolTable& symtable) {
     }
 }
 
+VoxalValue *eval_value(VoxalValue *value, SymbolTable context) {
+    switch(value->reportType()) {
+    case VX_VTYPE_LCONST:
+    case VX_VTYPE_LSTR:
+        return value;
+    case VX_VTYPE_FUNCTION:
+        return call_function((VoxalValueFunc*)value, context);
+    case VX_VTYPE_REF:
+        return context[((VoxalValueRef*)value)->str_val].body;
+    }
+
+    return NULL;
+}
+
+
 VoxalValue *call_function(VoxalValueFunc *function, SymbolTable context) {
     RuntimeSymbol sym = context[function->func.ident];
 
+    if(sym.type == SYMBOL_DETERMINABLE) {
+        return sym.body;
+    }
+
     if(sym.type == SYMBOL_BUILTIN) {
         return sym.builtin_body(function->func.params, context);
+    } else if(sym.type == SYMBOL_FUNCTION) {
+        if(sym.body->reportType() == VX_VTYPE_LSTR || sym.body->reportType() == VX_VTYPE_LCONST) {
+            return sym.body;
+        }
+
+        if(sym.body->reportType() == VX_VTYPE_REF) {
+            return context[((VoxalValueRef*)sym.body)->str_val].body;
+        }
+
+        if(function->func.params.size() != sym.params.size()) {
+            return NULL;
+        }
+
+        for(size_t i = 0; i < sym.params.size(); i++) {
+            VoxalValue *p = sym.params[i];
+            VoxalValue *val = function->func.params[i];
+
+            if(p->reportType() != VX_VTYPE_REF) {
+                return NULL;
+            }
+
+            VoxalValueRef *ref = (VoxalValueRef*)p;
+            VoxalValue *resolved = eval_value(val, context);
+
+            context[ref->str_val] = RuntimeSymbol(ref->str_val, resolved);
+        }
+
+        return call_function((VoxalValueFunc*)sym.body, context);
     }
 
     return NULL;
@@ -97,22 +197,23 @@ VoxalBuiltin create_op_builtin(int argc, function<double(vector<double>)> callba
 
         vector<double> params;
 
-        VoxalValue *func_ret = NULL;
         VoxalValueConst *cnst = NULL;
 
         for(VoxalValue *i : args) {
-            switch(i->reportType()) {
-            case VX_VTYPE_LCONST:
-                cnst = (VoxalValueConst*)i;
-                break;
-            case VX_VTYPE_FUNCTION:
-                func_ret = call_function((VoxalValueFunc*)i, context);
+            VoxalValue *resolved = eval_value(i, context);
 
-                if(func_ret->reportType() == VX_VTYPE_LCONST) {
-                    cnst = (VoxalValueConst*)func_ret;
-                }
+            if(resolved->reportType() == VX_VTYPE_REF) {
+                resolved = eval_value(context[((VoxalValueRef*)i)->str_val].body, context);
+            }
 
-                break;
+            if(resolved->reportType() != VX_VTYPE_LCONST) {
+                return NULL;
+            }
+
+            cnst = (VoxalValueConst*)resolved;
+
+            if(!cnst) {
+                return NULL;
             }
 
             params.push_back(cnst->const_val);

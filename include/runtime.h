@@ -11,6 +11,7 @@
 enum RuntimeSymbolType {
     SYMBOL_FUNCTION,
     SYMBOL_BUILTIN,
+    SYMBOL_DETERMINABLE,
     SYMBOL_NONE
 };
 
@@ -30,6 +31,7 @@ struct RuntimeSymbol {
 
     RuntimeSymbol();
     RuntimeSymbol(std::string name, VoxalBuiltin builtin);
+    RuntimeSymbol(std::string name, VoxalValue *val);
     RuntimeSymbol(VoxalValueFunc *function);
     ~RuntimeSymbol();
 };
@@ -49,6 +51,9 @@ public:
 
 VoxalBuiltin create_op_builtin(int argc, std::function<double(std::vector<double>)> callback);
 VoxalValue *call_function(VoxalValueFunc *function, SymbolTable context);
+VoxalValue *eval_value(VoxalValue *value, SymbolTable context);
+
 void define_builtins(SymbolTable& symtable);
+void print_voxal_value(VoxalValue *val);
 
 #endif //__RUNTIME_H__
