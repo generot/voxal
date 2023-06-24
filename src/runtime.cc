@@ -86,7 +86,7 @@ void print_voxal_value(VoxalValue *val) {
 
 void define_builtins(SymbolTable& symtable) {
     unordered_map<string, VoxalBuiltin> builtins = {
-        { "+",  create_op_builtin(2, [=](vector<double> args) { return args[0] + args[1]; }) },
+        { "+",  create_op_builtin(2, [=](vector<double> args) { return args[0] + args[1]; }) },~
         { "-",  create_op_builtin(2, [=](vector<double> args) { return args[0] - args[1]; }) },
         { "*",  create_op_builtin(2, [=](vector<double> args) { return args[0] * args[1]; }) },
         { "/",  create_op_builtin(2, [=](vector<double> args) { return args[0] / args[1]; }) },

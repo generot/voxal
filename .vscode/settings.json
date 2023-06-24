@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.vz": "nim",
+        "stdexcept": "cpp",
+        "unordered_map": "cpp"
+    }
+}

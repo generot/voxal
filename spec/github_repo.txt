@@ -1,2 +1,0 @@
-link: https://github.com/generot/voxal
-trello: https://trello.com/invite/b/rVy4Mt2Q/ATTI23f78ce51c7e97ce42a2f1b5438c83faFFD87FF9/voxal-programming-language
